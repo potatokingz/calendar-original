@@ -236,7 +236,7 @@
         background: var(--white);
         border-radius: 15px;
         box-shadow: var(--shadow);
-        display: flex; 
+        display: flex;
         flex-direction: column;
         overflow: hidden;
         z-index: 1000;
@@ -340,11 +340,34 @@
     }
     /* --- MARKDOWN STYLING ENDS HERE --- */
 
+    /* --- SOPHISTICATED TYPING INDICATOR --- */
     .typing-indicator {
-        font-style: italic;
-        color: #888;
-        align-self: flex-start;
+        display: flex;
+        align-items: center;
+        padding: 10px 15px !important; /* Ensure padding is consistent */
     }
+    .typing-indicator span {
+        height: 8px;
+        width: 8px;
+        background-color: #888;
+        border-radius: 50%;
+        display: inline-block;
+        margin: 0 2px;
+        animation: typing-blink 1.4s infinite both;
+    }
+    .typing-indicator span:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+    .typing-indicator span:nth-child(3) {
+        animation-delay: 0.4s;
+    }
+    @keyframes typing-blink {
+        0% { opacity: 0.2; transform: scale(1); }
+        20% { opacity: 1; transform: scale(1.2); }
+        100% { opacity: 0.2; transform: scale(1); }
+    }
+    /* --- END TYPING INDICATOR --- */
+
     #chat-form {
         display: flex;
         padding: 10px;
@@ -484,9 +507,10 @@
     // !!! SECURITY WARNING !!!
     // =================================================================================================
     // Storing an API key directly in client-side code (like this) is extremely insecure. 
-    // This is for demonstration purposes ONLY.
+    // This is for demonstration purposes ONLY. For a production site, you should move this
+    // logic to a backend server to protect your key.
     // =================================================================================================
-    const GEMINI_API_KEY = 'AIzaSyBoenaJVMri01MkgRssHWo7xFiiwk7RYho'; // PASTE YOUR API KEY HERE
+    const GEMINI_API_KEY = 'AIzaSyBoenaJVMri01MkgRssHWo7xFiiwk7RYho'; // PASTE YOUR GEMINI API KEY HERE
     const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
 
     chatbotToggler.addEventListener('click', () => {
@@ -504,7 +528,7 @@
 
         addMessage(userInput, 'user');
         chatInput.value = '';
-        if (GEMINI_API_KEY === 'YOUR_API_KEY_HERE') {
+        if (GEMINI_API_KEY === 'YOUR_API_KEY_HERE' || GEMINI_API_KEY === '') {
             addMessage('Моля, въведете валиден API ключ в кода на сайта, за да може чатът да работи.', 'bot');
             return;
         }
@@ -534,7 +558,8 @@
         const typingElement = document.createElement('div');
         typingElement.classList.add('message', 'bot-message', 'typing-indicator');
         typingElement.id = 'typing-indicator';
-        typingElement.textContent = '...пише';
+        // The new sophisticated typing animation is composed of three spans
+        typingElement.innerHTML = '<span></span><span></span><span></span>';
         chatMessages.appendChild(typingElement);
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
@@ -549,18 +574,23 @@
     async function getBotResponse(userInput) {
         showTypingIndicator();
 
-        // --- MODIFIED PROMPT WITH MARKDOWN INSTRUCTION ---
+        // --- UPDATED PROMPT ---
         const siteContext = `
             Ти си чат асистент за уебсайт, наречен "Vacation Calendar".
             Твоята цел е да помагаш на потребителите с въпроси относно сервиз за автомобили BMW и Mini.
             
             Ето важна информация за сайта, която трябва да знаеш:
             1.  Основната цел на сайта е да покаже кога сервизът е в отпуска чрез вграден календар.
-            2.  Ти НЕ МОЖЕШ да четеш информацията директно от календара. Ако потребител те попита за конкретни дати за отпуска, твоят отговор ТРЯБВА да бъде да го насочиш да погледне календара на страницата.
-            3.  Сервизът е специализиран за марките BMW и Mini.
-            4.  Сайтът е създаден от "Yasen Yanakiev".
-            5.  Отговаряй винаги на български език, ясно и разбираемо.
-            6.  Използвай Markdown форматиране (заглавия, списъци, получер шрифт), когато е подходящо, за да направиш отговорите по-четливи. Например, когато изброяваш услуги или обобщаваш информация.
+            2.  Ти НЕ МОЖЕШ да четеш информацията директно от вградения календар на "calendar.online". 
+            3.  Ако потребител те попита за конкретни дати за отпуска, почивни дни или кога сервизът работи, твоят отговор ТРЯБВА да бъде да го насочиш **учтиво** да погледне календара, който е на страницата. Не си измисляй дати.
+            4.  Примерни отговори за въпроси, свързани с календара:
+                - "За актуална информация относно почивни дни и отпуски, моля, проверете календара, който е видим на страницата."
+                - "Цялата информация за нашия график и кога сме в отпуска е налична в календара на сайта."
+                - "Не разполагам с достъп до графика в реално време. Най-добре е да погледнете календара за точна информация."
+            5.  Сервизът е специализиран **само** за марките BMW и Mini.
+            6.  Сайтът е създаден от "Yasen Yanakiev".
+            7.  Отговаряй винаги на български език, ясно, разбираемо и приятелски.
+            8.  Използвай Markdown форматиране (заглавия, списъци, получер шрифт), когато е подходящо, за да направиш отговорите по-четливи. Например, когато изброяваш услуги или обобщаваш информация.
         `;
 
         const fullPrompt = `${siteContext}\n\nПотребителски въпрос: "${userInput}"`;
