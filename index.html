@@ -6,6 +6,8 @@
   <title>Vacation Calendar</title>
   <link rel="icon" href="https://i.ibb.co/S7rNNNTN/IMG-0629-removebg-preview-1.jpg" type="image/png">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Fira+Mono&display=swap" rel="stylesheet">
+  <!-- Include the 'marked' library from a CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/lib/marked.umd.min.js"></script>
   <style>
     :root {
       --primary: #002b4e;
@@ -200,6 +202,173 @@
       box-shadow: 0 4px 16px #b1e1fa99;
     }
     @keyframes spin { 0% { transform: rotate(0deg);} 100% { transform: rotate(360deg);} }
+
+    /* --- CHATBOT CSS STARTS HERE --- */
+    #chatbot-toggler {
+        position: fixed;
+        bottom: 25px;
+        right: 25px;
+        width: 60px;
+        height: 60px;
+        background-color: var(--primary);
+        color: var(--white);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        cursor: pointer;
+        box-shadow: var(--shadow);
+        z-index: 1000;
+        transition: transform 0.3s, opacity 0.3s;
+    }
+    #chatbot-toggler:hover {
+        transform: scale(1.1);
+    }
+    #chatbot-window {
+        position: fixed;
+        bottom: 100px;
+        right: 25px;
+        width: 90vw;
+        max-width: 400px;
+        height: 70vh;
+        max-height: 600px;
+        background: var(--white);
+        border-radius: 15px;
+        box-shadow: var(--shadow);
+        display: flex; 
+        flex-direction: column;
+        overflow: hidden;
+        z-index: 1000;
+        transform: scale(0.5) translateY(100px);
+        opacity: 0;
+        pointer-events: none;
+        transition: transform 0.4s cubic-bezier(.57,1.21,.77,.96), opacity 0.4s;
+    }
+    #chatbot-window.show {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+        pointer-events: auto;
+    }
+    .chat-header {
+        padding: 15px;
+        background: var(--primary);
+        color: var(--white);
+        font-weight: 600;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    #close-chat {
+        background: none;
+        border: none;
+        color: var(--white);
+        font-size: 20px;
+        cursor: pointer;
+    }
+    .chat-messages {
+        flex-grow: 1;
+        padding: 15px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        text-align: left;
+    }
+    .message {
+        padding: 10px 15px;
+        border-radius: 20px;
+        max-width: 80%;
+        line-height: 1.4;
+    }
+    .user-message {
+        background-color: var(--secondary);
+        color: var(--white);
+        align-self: flex-end;
+        border-bottom-right-radius: 5px;
+    }
+    .bot-message {
+        background-color: #f1f1f1;
+        color: #333;
+        align-self: flex-start;
+        border-bottom-left-radius: 5px;
+    }
+    
+    /* --- MARKDOWN STYLING STARTS HERE --- */
+    .bot-message h1, .bot-message h2, .bot-message h3 {
+        margin-top: 0.5em;
+        margin-bottom: 0.5em;
+        font-weight: 700;
+        line-height: 1.2;
+    }
+    .bot-message h1 { font-size: 1.4em; }
+    .bot-message h2 { font-size: 1.2em; }
+    .bot-message h3 { font-size: 1.1em; }
+    .bot-message p {
+        margin-bottom: 0.5em;
+    }
+    .bot-message p:last-child {
+        margin-bottom: 0;
+    }
+    .bot-message ul, .bot-message ol {
+        padding-left: 20px;
+        margin-bottom: 0.5em;
+    }
+    .bot-message li {
+        margin-bottom: 0.25em;
+    }
+    .bot-message a {
+        color: var(--primary);
+        text-decoration: underline;
+    }
+    .bot-message code {
+        background-color: #e0e0e0;
+        padding: 2px 5px;
+        border-radius: 4px;
+        font-family: 'Fira Mono', monospace;
+    }
+    .bot-message pre {
+        background-color: #f0f0f0;
+        padding: 10px;
+        border-radius: 8px;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+    .bot-message pre code {
+        background-color: transparent;
+        padding: 0;
+    }
+    /* --- MARKDOWN STYLING ENDS HERE --- */
+
+    .typing-indicator {
+        font-style: italic;
+        color: #888;
+        align-self: flex-start;
+    }
+    #chat-form {
+        display: flex;
+        padding: 10px;
+        border-top: 1px solid #ddd;
+    }
+    #chat-input {
+        flex-grow: 1;
+        border: 1px solid #ccc;
+        border-radius: 20px;
+        padding: 10px 15px;
+        font-family: 'Poppins', sans-serif;
+    }
+    #chat-submit {
+        background: var(--primary);
+        color: var(--white);
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        margin-left: 10px;
+        cursor: pointer;
+        font-size: 18px;
+    }
+    /* --- CHATBOT CSS ENDS HERE --- */
     
     @media (min-width: 901px) {
       .header {
@@ -254,6 +423,25 @@
     <iframe src="https://calendar.online/5deb969c9fb87b85ffb7?iframe=true" title="Vacation Calendar"></iframe>
   </div>
 
+  <!-- CHATBOT HTML STRUCTURE STARTS HERE -->
+  <div id="chatbot-toggler" class="fade-in">
+    <span>✎</span>
+  </div>
+  <div id="chatbot-window">
+    <div class="chat-header">
+      <span>Чат бот</span>
+      <button id="close-chat">×</button>
+    </div>
+    <div class="chat-messages" id="chat-messages">
+       <div class="message bot-message">Здравейте! С какво мога да Ви помогна относно нашия сервиз за BMW и Mini?</div>
+    </div>
+    <form id="chat-form">
+      <input type="text" id="chat-input" placeholder="Напишете съобщение..." autocomplete="off">
+      <button type="submit" id="chat-submit">➤</button>
+    </form>
+  </div>
+  <!-- CHATBOT HTML STRUCTURE ENDS HERE -->
+
   <div class="cars fade-in">
     <img src="https://i.ibb.co/GQ5zx306/image-removebg-preview-27-1.png" alt="BMW SUV" loading="lazy">
     <img src="https://i.ibb.co/TSxpt68/bmw-sedan-1-1.png" alt="BMW Sedan" loading="lazy">
@@ -264,6 +452,7 @@
   </div>
 
   <script>
+    // --- EXISTING SCRIPT ---
     window.addEventListener("load", () => {
       const loader = document.getElementById("loader");
       loader.classList.add("hidden");
@@ -282,6 +471,133 @@
       randomize();
       bubble.addEventListener('animationiteration', randomize);
     });
+
+    // --- CHATBOT JAVASCRIPT STARTS HERE ---
+    const chatbotToggler = document.getElementById('chatbot-toggler');
+    const chatbotWindow = document.getElementById('chatbot-window');
+    const closeChatBtn = document.getElementById('close-chat');
+    const chatForm = document.getElementById('chat-form');
+    const chatInput = document.getElementById('chat-input');
+    const chatMessages = document.getElementById('chat-messages');
+
+    // =================================================================================================
+    // !!! SECURITY WARNING !!!
+    // =================================================================================================
+    // Storing an API key directly in client-side code (like this) is extremely insecure. 
+    // This is for demonstration purposes ONLY.
+    // =================================================================================================
+    const GEMINI_API_KEY = 'AIzaSyBoenaJVMri01MkgRssHWo7xFiiwk7RYho'; // PASTE YOUR API KEY HERE
+    const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+
+    chatbotToggler.addEventListener('click', () => {
+        chatbotWindow.classList.toggle('show');
+    });
+
+    closeChatBtn.addEventListener('click', () => {
+        chatbotWindow.classList.remove('show');
+    });
+
+    chatForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const userInput = chatInput.value.trim();
+        if (!userInput) return;
+
+        addMessage(userInput, 'user');
+        chatInput.value = '';
+        if (GEMINI_API_KEY === 'YOUR_API_KEY_HERE') {
+            addMessage('Моля, въведете валиден API ключ в кода на сайта, за да може чатът да работи.', 'bot');
+            return;
+        }
+        getBotResponse(userInput);
+    });
+
+    function addMessage(text, sender) {
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message', `${sender}-message`);
+
+        // If the message is from the bot, parse Markdown to HTML
+        if (sender === 'bot') {
+            // Important: 'marked.parse()' can be vulnerable to XSS if the content isn't trusted.
+            // Since this content comes directly from the Google API, the risk is low,
+            // but for user-generated content, you should use a sanitizer like DOMPurify.
+            messageElement.innerHTML = marked.parse(text);
+        } else {
+            messageElement.textContent = text;
+        }
+
+        chatMessages.appendChild(messageElement);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function showTypingIndicator() {
+        if (document.getElementById('typing-indicator')) return;
+        const typingElement = document.createElement('div');
+        typingElement.classList.add('message', 'bot-message', 'typing-indicator');
+        typingElement.id = 'typing-indicator';
+        typingElement.textContent = '...пише';
+        chatMessages.appendChild(typingElement);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function removeTypingIndicator() {
+        const typingElement = document.getElementById('typing-indicator');
+        if (typingElement) {
+            typingElement.remove();
+        }
+    }
+
+    async function getBotResponse(userInput) {
+        showTypingIndicator();
+
+        // --- MODIFIED PROMPT WITH MARKDOWN INSTRUCTION ---
+        const siteContext = `
+            Ти си чат асистент за уебсайт, наречен "Vacation Calendar".
+            Твоята цел е да помагаш на потребителите с въпроси относно сервиз за автомобили BMW и Mini.
+            
+            Ето важна информация за сайта, която трябва да знаеш:
+            1.  Основната цел на сайта е да покаже кога сервизът е в отпуска чрез вграден календар.
+            2.  Ти НЕ МОЖЕШ да четеш информацията директно от календара. Ако потребител те попита за конкретни дати за отпуска, твоят отговор ТРЯБВА да бъде да го насочиш да погледне календара на страницата.
+            3.  Сервизът е специализиран за марките BMW и Mini.
+            4.  Сайтът е създаден от "Yasen Yanakiev".
+            5.  Отговаряй винаги на български език, ясно и разбираемо.
+            6.  Използвай Markdown форматиране (заглавия, списъци, получер шрифт), когато е подходящо, за да направиш отговорите по-четливи. Например, когато изброяваш услуги или обобщаваш информация.
+        `;
+
+        const fullPrompt = `${siteContext}\n\nПотребителски въпрос: "${userInput}"`;
+
+        try {
+            const response = await fetch(`${API_URL}?key=${GEMINI_API_KEY}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{ text: fullPrompt }]
+                    }]
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`API Error: ${response.status} - ${errorData.error.message}`);
+            }
+
+            const data = await response.json();
+            const botResponse = data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0] 
+                              ? data.candidates[0].content.parts[0].text.trim()
+                              : "Не можах да обработя заявката. Моля, опитайте отново.";
+            
+            removeTypingIndicator();
+            addMessage(botResponse, 'bot');
+
+        } catch (error) {
+            console.error("Chatbot Error:", error);
+            removeTypingIndicator();
+            addMessage('Съжалявам, възникна грешка при свързването. Моля, проверете конзолата за грешки (F12) и се уверете, че API ключът е валиден.', 'bot');
+        }
+    }
+    // --- CHATBOT JAVASCRIPT ENDS HERE ---
   </script>
 </body>
 </html>
